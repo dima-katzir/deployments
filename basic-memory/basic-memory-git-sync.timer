@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Basic Memory Git synchronization every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30s
+AccuracySec=10s
+Persistent=true
+Unit=basic-memory-git-sync.service
+
+[Install]
+WantedBy=timers.target

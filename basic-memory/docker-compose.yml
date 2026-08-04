@@ -1,0 +1,79 @@
+services:
+  basic-memory:
+    image: ghcr.io/basicmachines-co/basic-memory:0.21.5
+    container_name: basic-memory
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - /srv/basic-memory/config:/home/appuser/.basic-memory:rw
+      - /srv/basic-memory/repos/mirror/kb:/app/data/mirror:rw
+      - /srv/basic-memory/repos/life-os-kb/current:/app/data/life-os:rw
+    environment:
+      BASIC_MEMORY_CONFIG_DIR: /home/appuser/.basic-memory
+      BASIC_MEMORY_HOME: /home/appuser/.basic-memory
+      BASIC_MEMORY_PROJECT_ROOT: /app/data
+      BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED: "false"
+      BASIC_MEMORY_SYNC_CHANGES: "true"
+      BASIC_MEMORY_LOG_LEVEL: INFO
+      BASIC_MEMORY_AUTO_UPDATE: "false"
+    command: ["basic-memory", "mcp", "--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]
+    group_add:
+      - "987"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "basic-memory", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mcp-gateway:
+    image: basic-memory-gateway:0.21.5-2
+    container_name: basic-memory-gateway
+    restart: unless-stopped
+    depends_on:
+      basic-memory:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - /srv/basic-memory/gateway.py:/app/gateway.py:ro
+      - /srv/basic-memory/oauth:/var/lib/fastmcp/oauth:rw
+      - /srv/basic-memory/data:/var/lib/basic-memory-host:ro
+    env_file:
+      - /srv/basic-memory/secrets/gateway.env
+    environment:
+      BASIC_MEMORY_BACKEND_URL: http://basic-memory:8000/mcp
+      OAUTH_STORAGE_DIR: /var/lib/fastmcp/oauth
+      GIT_SYNC_STATUS_FILE: /var/lib/basic-memory-host/git-sync-status.json
+    entrypoint: ["python", "/app/gateway.py"]
+    group_add:
+      - "987"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

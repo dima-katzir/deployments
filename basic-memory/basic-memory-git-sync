@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+STATUS_FILE=/srv/basic-memory/data/git-sync-status.json
+
+write_status() {
+  local status="$1"
+  local detail="$2"
+  local timestamp
+  local temporary
+  timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  temporary="${STATUS_FILE}.tmp"
+  printf '{"timestamp":"%s","status":"%s","detail":"%s"}\n' \
+    "$timestamp" "$status" "$detail" >"$temporary"
+  chmod 0640 "$temporary"
+  mv "$temporary" "$STATUS_FILE"
+}
+
+sync_repo() {
+  local name="$1"
+  local repository="$2"
+  local subtree="$3"
+  local timestamp
+
+  timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+  git -C "$repository" add -A -- "$subtree"
+  if ! git -C "$repository" diff --cached --quiet; then
+    git -C "$repository" commit -m "chore(basic-memory): sync ${timestamp}"
+  fi
+
+  git -C "$repository" fetch --prune origin main
+  if ! git -C "$repository" rebase origin/main; then
+    git -C "$repository" rebase --abort || true
+    return 1
+  fi
+  git -C "$repository" push origin main
+  echo "$name synchronized"
+}
+
+failed=""
+if ! sync_repo mirror /srv/basic-memory/repos/mirror kb; then
+  failed="mirror"
+fi
+if ! sync_repo life-os /srv/basic-memory/repos/life-os-kb current; then
+  failed="${failed:+${failed},}life-os"
+fi
+
+if [[ -n "$failed" ]]; then
+  write_status failed "$failed"
+  exit 1
+fi
+
+write_status ok "mirror,life-os"

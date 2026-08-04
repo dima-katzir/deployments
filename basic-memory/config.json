@@ -1,0 +1,15 @@
+{
+  "default_project": "mirror",
+  "projects": {
+    "mirror": {
+      "path": "/app/data/mirror",
+      "mode": "local"
+    },
+    "life-os": {
+      "path": "/app/data/life-os",
+      "mode": "local"
+    }
+  },
+  "semantic_search_enabled": false,
+  "permalinks_include_project": true
+}

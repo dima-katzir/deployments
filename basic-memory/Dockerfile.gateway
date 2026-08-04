@@ -1,0 +1,5 @@
+FROM ghcr.io/basicmachines-co/basic-memory:0.21.5
+
+USER root
+RUN uv pip install --python /app/.venv/bin/python --no-cache 'py-key-value-aio[disk]==0.4.4'
+USER appuser

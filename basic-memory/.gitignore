@@ -1,0 +1,21 @@
+# Host-only secrets and identity material
+gateway.env
+secrets/
+*.key
+*.pem
+
+# Runtime and derived data
+oauth/
+data/
+repos/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+__pycache__/
+
+# Local environment overrides
+.env
+.env.*
+!.env.example
+!gateway.env.example

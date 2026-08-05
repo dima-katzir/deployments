@@ -1,0 +1,20 @@
+{
+  "default_project": "mirror",
+  "projects": {
+    "mirror": {
+      "path": "/app/data/mirror",
+      "mode": "local"
+    },
+    "phase2-verification": {
+      "path": "/app/data/phase2-verification",
+      "mode": "local"
+    }
+  },
+  "semantic_search_enabled": false,
+  "ensure_frontmatter_on_sync": false,
+  "sync_changes": true,
+  "permalinks_include_project": true,
+  "auto_update": false,
+  "logfire_enabled": false,
+  "logfire_send_to_logfire": false
+}

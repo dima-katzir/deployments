@@ -44,6 +44,12 @@ The following are runtime state and must also remain untracked:
 
 These files capture the existing deployment. Architectural hardening should be proposed through reviewed changes rather than editing the live host first.
 
+## Phase 2 parallel deployment
+
+The hardened, isolated Phase 2 implementation lives in [`phase2/`](phase2/README.md).
+The files in this directory remain the legacy deployment snapshot and rollback
+reference until the later migration cutover phase.
+
 ## Validation
 
 Before deployment:

@@ -1,0 +1,171 @@
+name: basic-memory-phase2
+
+services:
+  life-backend:
+    build:
+      context: .
+      target: backend
+    image: basic-memory-phase2-backend:0.22.1-1
+    container_name: basic-memory-phase2-life-backend
+    restart: unless-stopped
+    volumes:
+      - /srv/basic-memory-phase2/state/life:/home/appuser/.basic-memory:rw
+      - /srv/basic-memory-phase2/releases/life-os/current:/app/data/life-os:ro
+    environment:
+      BASIC_MEMORY_CONFIG_DIR: /home/appuser/.basic-memory
+      BASIC_MEMORY_PROJECT_ROOT: /app/data
+      BASIC_MEMORY_MCP_PROJECT: life-os
+      BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED: "true"
+      BASIC_MEMORY_SEMANTIC_EMBEDDING_PROVIDER: fastembed
+      BASIC_MEMORY_SEMANTIC_EMBEDDING_MODEL: bge-small-en-v1.5
+      BASIC_MEMORY_ENSURE_FRONTMATTER_ON_SYNC: "false"
+      BASIC_MEMORY_SYNC_CHANGES: "true"
+      BASIC_MEMORY_AUTO_UPDATE: "false"
+      BASIC_MEMORY_LOG_LEVEL: INFO
+      BASIC_MEMORY_LOGFIRE_ENABLED: "false"
+      BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE: "false"
+      FASTEMBED_CACHE_PATH: /home/appuser/.basic-memory/fastembed_cache
+    command: ["basic-memory", "mcp", "--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=96m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 192
+    mem_limit: 700m
+    networks: [life-internal]
+    healthcheck:
+      test: ["CMD", "python", "/app/backend_health.py", "http://127.0.0.1:8000/mcp"]
+      interval: 30s
+      timeout: 15s
+      retries: 6
+      start_period: 120s
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  life-gateway:
+    build:
+      context: .
+      target: gateway
+    image: basic-memory-phase2-gateway:0.22.1-1
+    container_name: basic-memory-phase2-life-gateway
+    restart: unless-stopped
+    depends_on:
+      life-backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:8101:8001
+    volumes:
+      - /srv/basic-memory-phase2/oauth/life:/var/lib/fastmcp/oauth:rw
+    env_file:
+      - path: /srv/basic-memory-phase2/secrets/life.env
+        required: false
+    environment:
+      BASIC_MEMORY_BACKEND_URL: http://life-backend:8000/mcp
+      OAUTH_STORAGE_DIR: /var/lib/fastmcp/oauth
+    entrypoint: ["python", "/app/gateway_life_os.py"]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 96
+    mem_limit: 160m
+    networks: [life-internal]
+    logging: *logging
+
+  general-backend:
+    build:
+      context: .
+      target: backend
+    image: basic-memory-phase2-backend:0.22.1-1
+    container_name: basic-memory-phase2-general-backend
+    restart: unless-stopped
+    volumes:
+      - /srv/basic-memory-phase2/state/general:/home/appuser/.basic-memory:rw
+      - /srv/basic-memory/repos/mirror/kb:/app/data/mirror:rw
+      - /srv/basic-memory-phase2/verification:/app/data/phase2-verification:rw
+    environment:
+      BASIC_MEMORY_CONFIG_DIR: /home/appuser/.basic-memory
+      BASIC_MEMORY_PROJECT_ROOT: /app/data
+      BASIC_MEMORY_SEMANTIC_SEARCH_ENABLED: "false"
+      BASIC_MEMORY_ENSURE_FRONTMATTER_ON_SYNC: "false"
+      BASIC_MEMORY_SYNC_CHANGES: "true"
+      BASIC_MEMORY_AUTO_UPDATE: "false"
+      BASIC_MEMORY_LOG_LEVEL: INFO
+      BASIC_MEMORY_LOGFIRE_ENABLED: "false"
+      BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE: "false"
+    command: ["basic-memory", "mcp", "--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    networks: [general-internal]
+    healthcheck:
+      test: ["CMD", "python", "/app/backend_health.py", "http://127.0.0.1:8000/mcp"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+    logging: *logging
+
+  general-gateway:
+    build:
+      context: .
+      target: gateway
+    image: basic-memory-phase2-gateway:0.22.1-1
+    container_name: basic-memory-phase2-general-gateway
+    restart: unless-stopped
+    depends_on:
+      general-backend:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:8201:8001
+    volumes:
+      - /srv/basic-memory-phase2/oauth/general:/var/lib/fastmcp/oauth:rw
+    env_file:
+      - path: /srv/basic-memory-phase2/secrets/general.env
+        required: false
+    environment:
+      BASIC_MEMORY_BACKEND_URL: http://general-backend:8000/mcp
+      OAUTH_STORAGE_DIR: /var/lib/fastmcp/oauth
+    entrypoint: ["python", "/app/gateway_general.py"]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 96
+    mem_limit: 160m
+    networks: [general-internal]
+    logging: *logging
+
+  validator:
+    image: basic-memory-phase2-backend:0.22.1-1
+    profiles: [tools]
+    depends_on:
+      life-backend:
+        condition: service_healthy
+      general-backend:
+        condition: service_healthy
+    entrypoint: ["python", "/app/validate_backends.py"]
+    volumes:
+      - /srv/basic-memory-phase2/releases/life-os/current:/app/data/life-os:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks: [life-internal, general-internal]
+
+networks:
+  life-internal:
+    internal: true
+  general-internal:
+    internal: true

@@ -1,0 +1,18 @@
+{
+  "default_project": "life-os",
+  "projects": {
+    "life-os": {
+      "path": "/app/data/life-os",
+      "mode": "local"
+    }
+  },
+  "semantic_search_enabled": true,
+  "semantic_embedding_provider": "fastembed",
+  "semantic_embedding_model": "bge-small-en-v1.5",
+  "ensure_frontmatter_on_sync": false,
+  "sync_changes": true,
+  "permalinks_include_project": true,
+  "auto_update": false,
+  "logfire_enabled": false,
+  "logfire_send_to_logfire": false
+}

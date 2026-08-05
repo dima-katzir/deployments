@@ -1,0 +1,10 @@
+*.env
+secrets/
+oauth/
+state/
+releases/
+verification/
+*.db
+*.sqlite*
+*.log
+__pycache__/

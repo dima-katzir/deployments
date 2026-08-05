@@ -26,6 +26,8 @@ services:
       BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE: "false"
       FASTEMBED_CACHE_PATH: /home/appuser/.basic-memory/fastembed_cache
     command: ["basic-memory", "mcp", "--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]
+    group_add:
+      - "987"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=96m
@@ -99,6 +101,8 @@ services:
       BASIC_MEMORY_LOGFIRE_ENABLED: "false"
       BASIC_MEMORY_LOGFIRE_SEND_TO_LOGFIRE: "false"
     command: ["basic-memory", "mcp", "--transport", "sse", "--host", "0.0.0.0", "--port", "8000"]
+    group_add:
+      - "987"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
@@ -157,6 +161,8 @@ services:
     entrypoint: ["python", "/app/validate_backends.py"]
     volumes:
       - /srv/basic-memory-phase2/releases/life-os/current:/app/data/life-os:ro
+    group_add:
+      - "987"
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=32m

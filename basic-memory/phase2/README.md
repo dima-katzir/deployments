@@ -23,6 +23,11 @@ networks, gateways, OAuth stores, OAuth applications, encryption keys, and JWT
 signing keys. Neither backend publishes a host port. The public gateways are
 bound to loopback for Caddy.
 
+Each backend mounts its committed project registry over
+`/home/appuser/.basic-memory/config.json` read-only. This prevents Basic Memory
+from silently generating a default `main` project and makes the project
+allowlist part of the reviewed deployment source.
+
 Only the Life backend enables semantic embeddings. This is deliberate: Phase 2
 requires hybrid semantic retrieval for Life OS, while the host has approximately
 1 GiB RAM and must keep the legacy stack available during the parallel stage.

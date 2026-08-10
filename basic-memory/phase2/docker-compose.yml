@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     volumes:
       - /srv/basic-memory-phase2/state/life:/home/appuser/.basic-memory:rw
+      - ./config-life.json:/home/appuser/.basic-memory/config.json:ro
       - /srv/basic-memory-phase2/releases/life-os/current:/app/data/life-os:ro
     environment:
       BASIC_MEMORY_CONFIG_DIR: /home/appuser/.basic-memory
@@ -88,6 +89,7 @@ services:
     restart: unless-stopped
     volumes:
       - /srv/basic-memory-phase2/state/general:/home/appuser/.basic-memory:rw
+      - ./config-general.json:/home/appuser/.basic-memory/config.json:ro
       - /srv/basic-memory/repos/mirror/kb:/app/data/mirror:rw
       - /srv/basic-memory-phase2/verification:/app/data/phase2-verification:rw
     environment:

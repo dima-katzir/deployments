@@ -31,6 +31,10 @@ allowlist part of the reviewed deployment source.
 Only the Life backend enables semantic embeddings. This is deliberate: Phase 2
 requires hybrid semantic retrieval for Life OS, while the host has approximately
 1 GiB RAM and must keep the legacy stack available during the parallel stage.
+Backend health checks therefore use a lightweight TCP readiness probe. Loading
+a complete FastMCP client in every recurring health check causes sustained swap
+pressure on this host; full tool and retrieval checks belong to the one-shot
+validator instead.
 
 ## Filesystem boundary
 
